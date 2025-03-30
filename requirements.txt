@@ -1,0 +1,9 @@
+requests
+pysocks 
+selenium 
+seleniumbase 
+fake-useragent 
+cryptography 
+pystyle 
+colorama 
+tkinter
